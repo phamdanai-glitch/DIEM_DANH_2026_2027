@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Danh Sách Điểm Danh - THPT Vị Thanh</title>
+    <title>Tra Cứu Điểm Danh - THPT Vị Thanh</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -24,7 +24,7 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-slate-900 leading-tight">Tra Cứu Điểm Danh Học Sinh</h1>
-                    <p class="text-xs text-slate-500">Trường THPT Vị Thanh — Trang tính: <span class="font-semibold text-sky-600">dulieu</span></p>
+                    <p class="text-xs text-slate-500">Trường THPT Vị Thanh — Sheet: <span class="font-semibold text-sky-600">dulieu</span></p>
                 </div>
             </div>
 
@@ -54,10 +54,9 @@
             <div class="w-full sm:w-48">
                 <select id="statusFilter" onchange="applyFilters()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all">
                     <option value="">-- Tất cả trạng thái --</option>
-                    <option value="Đúng giờ">Đúng giờ</option>
-                    <option value="Trễ">Đi trễ</option>
-                    <option value="P">Vắng có phép (P)</option>
-                    <option value="KP">Vắng không phép (KP)</option>
+                    <option value="ĐÚNG GIỜ">Đúng giờ (&lt; 07:00)</option>
+                    <option value="ĐI TRỄ">Đi trễ (&ge; 07:00)</option>
+                    <option value="VẮNG">Vắng mặt</option>
                 </select>
             </div>
         </div>
@@ -72,7 +71,7 @@
                             <th class="py-3.5 px-4">Họ và Tên</th>
                             <th class="py-3.5 px-4 text-center">Lớp</th>
                             <th class="py-3.5 px-4 text-center">Mã HS</th>
-                            <th class="py-3.5 px-4 text-center">Thời Gian Điểm Danh</th>
+                            <th class="py-3.5 px-4 text-center">Thời Gian Quét</th>
                             <th class="py-3.5 px-4 text-center">Trạng Thái</th>
                         </tr>
                     </thead>
@@ -94,7 +93,7 @@
 
     <script>
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyM394lmbkOpjRzGWUDGSLLzPIzvf-FE0fDbQsUmUxxAMuKdA1mIg2E-inscbIbNIWs7w/exec";
-        const LOCAL_STORAGE_KEY = "FAST_STUDENT_CACHE_V1";
+        const LOCAL_STORAGE_KEY = "FAST_STUDENT_CACHE_V2";
         
         let allStudents = [];
         let filteredStudents = [];
@@ -105,7 +104,6 @@
             
             if (reloadIcon) reloadIcon.classList.add('animate-spin');
 
-            // 1. HIỂN THỊ TỨC THÌ TỪ LOCALSTORAGE (CHƯA TỚI 0.1 GIÂY)
             const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
             if (localData && !isManualReload) {
                 try {
@@ -120,7 +118,6 @@
                 if (loadingState) loadingState.classList.remove('hidden');
             }
 
-            // 2. GỌI NGẦM GOOGLE SHEET ĐỂ CẬP NHẬT DỮ LIỆU MỚI
             const oldScript = document.getElementById('jsonp_script');
             if (oldScript) oldScript.remove();
 
@@ -166,12 +163,7 @@
             filteredStudents = allStudents.filter(s => {
                 const matchesSearch = !search || String(s.hoTen).toLowerCase().includes(search) || String(s.maHS).includes(search);
                 const matchesClass = !selectedClass || s.lop === selectedClass;
-                
-                let matchesStatus = true;
-                if (selectedStatus === 'Đúng giờ') matchesStatus = (s.trangThai === 'Đúng giờ');
-                else if (selectedStatus === 'Trễ') matchesStatus = (s.trangThai === 'Trễ');
-                else if (selectedStatus === 'P') matchesStatus = (s.trangThai === 'P' || s.trangThai === 'p');
-                else if (selectedStatus === 'KP') matchesStatus = (s.trangThai === 'KP' || !s.trangThai);
+                const matchesStatus = !selectedStatus || s.trangThai === selectedStatus;
 
                 return matchesSearch && matchesClass && matchesStatus;
             });
@@ -194,18 +186,14 @@
 
             filteredStudents.forEach((s, idx) => {
                 let badgeStyle = "bg-rose-50 text-rose-700 border-rose-200";
-                let statusText = "Không Phép (KP)";
+                let statusText = "Vắng mặt";
 
-                const st = String(s.trangThai).toUpperCase();
-                if (st === 'ĐÚNG GIỜ') {
+                if (s.trangThai === 'ĐÚNG GIỜ') {
                     badgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-200";
                     statusText = "Đúng giờ";
-                } else if (st === 'TRỄ') {
+                } else if (s.trangThai === 'ĐI TRỄ') {
                     badgeStyle = "bg-amber-50 text-amber-700 border-amber-200";
                     statusText = "Đi trễ";
-                } else if (st === 'P') {
-                    badgeStyle = "bg-sky-50 text-sky-700 border-sky-200";
-                    statusText = "Có phép (P)";
                 }
 
                 html += `
