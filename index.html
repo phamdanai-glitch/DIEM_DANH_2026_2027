@@ -28,7 +28,7 @@
                 </div>
             </div>
 
-            <button onclick="fetchData()" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-xl transition-all shadow-sm">
+            <button onclick="fetchData(true)" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-xl transition-all shadow-sm">
                 <i class="ph ph-arrows-clockwise text-base" id="reloadIcon"></i>
                 <span>Tải lại dữ liệu</span>
             </button>
@@ -80,13 +80,11 @@
                 </table>
             </div>
 
-            <!-- TRANG THAI LOADING -->
-            <div id="loadingState" class="py-12 text-center">
+            <div id="loadingState" class="py-12 text-center hidden">
                 <div class="inline-block w-7 h-7 border-3 border-sky-600 border-t-transparent rounded-full animate-spin"></div>
-                <p class="text-slate-500 text-sm mt-2">Đang tải danh sách từ Google Sheet...</p>
+                <p class="text-slate-500 text-sm mt-2">Đang đồng bộ dữ liệu mới nhất...</p>
             </div>
 
-            <!-- TRANG THAI RONG -->
             <div id="emptyState" class="py-12 text-center hidden">
                 <i class="ph ph-user-list text-4xl text-slate-300"></i>
                 <p class="text-slate-500 text-sm mt-2">Không tìm thấy dữ liệu học sinh phù hợp.</p>
@@ -95,19 +93,34 @@
     </main>
 
     <script>
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwLMevnywlaJaeJ-ms1X3UksXq-I1ExMsFfQqDeFwy6e-zvTd1dEBSjKNsBonK4txZiw/exec";
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyM394lmbkOpjRzGWUDGSLLzPIzvf-FE0fDbQsUmUxxAMuKdA1mIg2E-inscbIbNIWs7w/exec";
+        const LOCAL_STORAGE_KEY = "FAST_STUDENT_CACHE_V1";
         
         let allStudents = [];
         let filteredStudents = [];
 
-        function fetchData() {
+        function fetchData(isManualReload = false) {
             const reloadIcon = document.getElementById('reloadIcon');
             const loadingState = document.getElementById('loadingState');
             
             if (reloadIcon) reloadIcon.classList.add('animate-spin');
-            if (loadingState) loadingState.classList.remove('hidden');
 
-            // Xóa script JSONP cũ nếu có
+            // 1. HIỂN THỊ TỨC THÌ TỪ LOCALSTORAGE (CHƯA TỚI 0.1 GIÂY)
+            const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (localData && !isManualReload) {
+                try {
+                    const parsed = JSON.parse(localData);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        allStudents = parsed;
+                        populateClassDropdown();
+                        applyFilters();
+                    }
+                } catch(e){}
+            } else {
+                if (loadingState) loadingState.classList.remove('hidden');
+            }
+
+            // 2. GỌI NGẦM GOOGLE SHEET ĐỂ CẬP NHẬT DỮ LIỆU MỚI
             const oldScript = document.getElementById('jsonp_script');
             if (oldScript) oldScript.remove();
 
@@ -115,8 +128,9 @@
                 if (reloadIcon) reloadIcon.classList.remove('animate-spin');
                 if (loadingState) loadingState.classList.add('hidden');
 
-                if (Array.isArray(data)) {
+                if (Array.isArray(data) && data.length > 0) {
                     allStudents = data;
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
                     populateClassDropdown();
                     applyFilters();
                 }
@@ -128,7 +142,6 @@
             script.onerror = function() {
                 if (reloadIcon) reloadIcon.classList.remove('animate-spin');
                 if (loadingState) loadingState.classList.add('hidden');
-                alert("Lỗi tải dữ liệu từ Google Sheet!");
             };
             document.body.appendChild(script);
         }
@@ -214,7 +227,7 @@
             tbody.innerHTML = html;
         }
 
-        window.addEventListener('DOMContentLoaded', fetchData);
+        window.addEventListener('DOMContentLoaded', () => fetchData(false));
     </script>
 </body>
 </html>
