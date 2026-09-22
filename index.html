@@ -51,7 +51,7 @@
                             <span class="font-medium text-slate-700">Trường THPT Vị Thanh</span>
                             <span>—</span>
                             <span>Tổng HS trong file: <strong id="totalFileHs" class="text-indigo-600 font-semibold">...</strong></span>
-                            <span class="inline-flex items-center gap-1 text-emerald-600 font-medium ml-2">
+                            <span class="inline-flex items-center gap-1 text-emerald-600 font-medium ml-2" id="syncStatus">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                                 Đã kết nối dữ liệu
                             </span>
@@ -61,7 +61,7 @@
 
                 <!-- TOP ACTION BUTTONS -->
                 <div class="flex flex-wrap items-center gap-2.5">
-                    <button onclick="fetchData(true)" id="reloadBtn" class="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm" title="Tải lại dữ liệu trực tiếp từ Google Sheet">
+                    <button onclick="fetchData(true)" id="reloadBtn" class="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm" title="Đồng bộ trực tiếp từ Google Sheet">
                         <i class="ph ph-arrows-clockwise text-lg" id="reloadIcon"></i>
                     </button>
 
@@ -73,11 +73,6 @@
                     <button onclick="approveSelected()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm transition-all shadow-sm shadow-emerald-200">
                         <i class="ph ph-check-circle text-lg"></i>
                         <span>GVCN Duyệt Có Phép</span>
-                    </button>
-
-                    <button class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm transition-colors shadow-sm">
-                        <i class="ph ph-clock-counter-clockwise text-lg"></i>
-                        <span>Ghi sang Lịch sử</span>
                     </button>
 
                     <button onclick="resetData()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-rose-200 bg-rose-50/50 text-rose-600 hover:bg-rose-100/60 font-medium text-sm transition-colors">
@@ -210,7 +205,7 @@
             <!-- LOADING STATE -->
             <div id="loadingState" class="py-12 text-center hidden">
                 <div class="inline-block w-8 h-8 border-3 border-sky-600 border-t-transparent rounded-full animate-spin"></div>
-                <p class="text-slate-500 text-sm mt-3">Đang cập nhật dữ liệu mới nhất từ Google Sheet...</p>
+                <p class="text-slate-500 text-sm mt-3">Đang cập nhật dữ liệu từ Google Sheet...</p>
             </div>
 
             <!-- EMPTY STATE -->
@@ -229,60 +224,69 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // CẤU HÌNH API KẾT NỐI GOOGLE APPS SCRIPT WEB APP
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwajktYAcUQAMHuqhcTWsHZ6LKvrWAzdtsTKZSrCcUFXO1Sp0F_kF5nrv_NLKvHblbP9w/exec";
-        const CACHE_KEY = "STU_ATTENDANCE_CACHE_V2";
+        // API GOOGLE APPS SCRIPT ĐÃ CẤU HÌNH CỦA BẠN
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyM394lmbkOpjRzGWUDGSLLzPIzvf-FE0fDbQsUmUxxAMuKdA1mIg2E-inscbIbNIWs7w/exec";
+        const CACHE_KEY = "STU_ATTENDANCE_V3";
 
         let allStudents = [];
         let filteredStudents = [];
         let selectedStudentIds = new Set();
 
-        // TẢI DỮ LIỆU TỐI ƯU SIÊU NHANH BẰNG LOCALSTORAGE
-        async function fetchData(forceUserReload = false) {
+        // TẢI DỮ LIỆU SIÊU TỐC (CỬA SỔ LẮP CACHE HIỂN THỊ TRONG 0.01s)
+        async function fetchData(forceReload = false) {
             const reloadIcon = document.getElementById('reloadIcon');
             const loadingState = document.getElementById('loadingState');
             
-            reloadIcon.classList.add('animate-spin');
+            if (reloadIcon) reloadIcon.classList.add('animate-spin');
 
-            // 1. ĐỌC TỨC THÌ TỪ LOCALSTORAGE (NẾU CÓ)
+            // 1. LẤY TỪ LOCALSTORAGE VÀ HIỂN THỊ TỨC THÌ
             const cachedData = localStorage.getItem(CACHE_KEY);
-            if (cachedData && !forceUserReload) {
+            if (cachedData && !forceReload) {
                 try {
                     allStudents = JSON.parse(cachedData);
                     document.getElementById('totalFileHs').innerText = allStudents.length;
                     populateClassDropdown();
                     applyFilters();
+                    if (loadingState) loadingState.classList.add('hidden');
                 } catch(e) {
-                    console.error("Cache parse error:", e);
+                    console.error("Lỗi đọc cache:", e);
                 }
             } else if (!cachedData) {
-                loadingState.classList.remove('hidden');
+                if (loadingState) loadingState.classList.remove('hidden');
             }
 
-            // 2. GỌI API GOOGLE APPS SCRIPT ĐỂ CẬP NHẬT DỮ LIỆU MỚI NHẤT
+            // 2. ĐỒNG BỘ NGẦM MỚI NHẤT TỪ GOOGLE SCRIPT KHÔNG LÀM ĐẶC TRANG
             try {
-                const res = await fetch(APPS_SCRIPT_URL);
-                const data = await res.json();
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'GET',
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+
+                if (!response.ok) throw new Error("Kết nối API thất bại");
+
+                const data = await response.json();
                 
-                if (data && data.length > 0) {
+                if (Array.isArray(data) && data.length > 0) {
                     allStudents = data;
-                    // Lưu dữ liệu mới vào bộ nhớ đệm
                     localStorage.setItem(CACHE_KEY, JSON.stringify(data));
                     
                     document.getElementById('totalFileHs').innerText = allStudents.length;
                     populateClassDropdown();
                     applyFilters();
 
-                    if (forceUserReload) {
-                        showToast("Đã đồng bộ thành công dữ liệu từ Google Sheet!", "success");
+                    if (forceReload) {
+                        showToast("Đã đồng bộ dữ liệu mới nhất thành công!", "success");
                     }
                 }
             } catch (err) {
-                console.error("Lỗi lấy dữ liệu:", err);
-                if (!cachedData) showToast("Lỗi kết nối tới Google Sheet!", "error");
+                console.error("Lỗi tải ngầm từ Google:", err);
+                if (!cachedData) {
+                    showToast("Không thể kết nối đến Google Sheet!", "error");
+                }
             } finally {
-                reloadIcon.classList.remove('animate-spin');
-                loadingState.classList.add('hidden');
+                if (reloadIcon) reloadIcon.classList.remove('animate-spin');
+                if (loadingState) loadingState.classList.add('hidden');
             }
         }
 
@@ -299,7 +303,7 @@
             classSelect.innerHTML = html;
         }
 
-        // LỌC DỮ LIỆU
+        // LỌC DỮ LIỆU CỰC NHANH TRÊN BỘ NHỚ
         function applyFilters() {
             const search = document.getElementById('searchInput').value.toLowerCase().trim();
             const selectedClass = document.getElementById('classFilter').value;
@@ -376,7 +380,7 @@
             tbody.innerHTML = html;
         }
 
-        // CẬP NHẬT CON SỐ THỐNG KÊ
+        // CẬP NHẬT THỐNG KÊ
         function updateStats() {
             document.getElementById('statDisplay').innerText = filteredStudents.length;
             
@@ -397,7 +401,7 @@
             document.getElementById('statSelected').innerText = selectedStudentIds.size;
         }
 
-        // BẬT/TẮT CHỌN HỌC SINH
+        // CHỌN / BỎ CHỌN HỌC SINH
         function toggleSelect(id) {
             if (selectedStudentIds.has(id)) {
                 selectedStudentIds.delete(id);
@@ -430,18 +434,17 @@
                 }
             });
 
-            // Cập nhật lại bộ nhớ đệm
             localStorage.setItem(CACHE_KEY, JSON.stringify(allStudents));
 
             selectedStudentIds.clear();
             document.getElementById('selectAllCheckbox').checked = false;
             applyFilters();
-            showToast("Đã cập nhật trạng thái Có Phép thành công!", "success");
+            showToast("Đã duyệt trạng thái Có Phép thành công!", "success");
         }
 
         // ADMIN RESET
         function resetData() {
-            if (confirm("Bạn có chắc chắn muốn đặt lại và tải mới toàn bộ dữ liệu?")) {
+            if (confirm("Bạn có chắc chắn muốn làm mới bộ nhớ đệm và tải lại dữ liệu?")) {
                 localStorage.removeItem(CACHE_KEY);
                 fetchData(true);
             }
@@ -466,7 +469,7 @@
             }, 3000);
         }
 
-        // KHỞI CHẠY TẢI DỮ LIỆU KHI TRANG LÊN
+        // NẠP DỮ LIỆU NGAY KHI VÀO TRANG
         window.addEventListener('DOMContentLoaded', () => fetchData(false));
     </script>
 </body>
