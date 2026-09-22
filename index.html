@@ -5,29 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tra Cứu & Duyệt Điểm Danh - Trường THPT Vị Thanh</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#f0f7ff',
-                            100: '#e0effe',
-                            500: '#0284c7',
-                            600: '#0369a1',
-                            700: '#0f172a',
-                        }
-                    }
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
                 }
             }
         }
@@ -35,12 +21,11 @@
 </head>
 <body class="bg-[#f8fafc] text-slate-800 antialiased min-h-screen pb-12">
 
-    <!-- HEADER / NAVIGATION -->
+    <!-- HEADER -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 
-                <!-- BRAND / LOGO & TITLE -->
                 <div class="flex items-center space-x-3">
                     <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-sky-600 to-blue-700 flex items-center justify-center text-white shadow-md shadow-sky-200 flex-shrink-0">
                         <i class="ph ph-graduation-cap text-2xl"></i>
@@ -51,7 +36,7 @@
                             <span class="font-medium text-slate-700">Trường THPT Vị Thanh</span>
                             <span>—</span>
                             <span>Tổng HS trong file: <strong id="totalFileHs" class="text-indigo-600 font-semibold">...</strong></span>
-                            <span class="inline-flex items-center gap-1 text-emerald-600 font-medium ml-2" id="syncStatus">
+                            <span class="inline-flex items-center gap-1 text-emerald-600 font-medium ml-2">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                                 Đã kết nối dữ liệu
                             </span>
@@ -59,9 +44,8 @@
                     </div>
                 </div>
 
-                <!-- TOP ACTION BUTTONS -->
                 <div class="flex flex-wrap items-center gap-2.5">
-                    <button onclick="fetchData(true)" id="reloadBtn" class="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm" title="Đồng bộ trực tiếp từ Google Sheet">
+                    <button onclick="fetchData(true)" id="reloadBtn" class="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm" title="Tải lại dữ liệu">
                         <i class="ph ph-arrows-clockwise text-lg" id="reloadIcon"></i>
                     </button>
 
@@ -79,11 +63,6 @@
                         <i class="ph ph-warning-circle text-lg"></i>
                         <span>Admin Reset</span>
                     </button>
-
-                    <button class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-medium text-sm transition-colors shadow-sm">
-                        <i class="ph ph-key text-lg"></i>
-                        <span>Đổi Mật Khẩu</span>
-                    </button>
                 </div>
             </div>
         </div>
@@ -92,10 +71,8 @@
     <!-- MAIN CONTAINER -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
 
-        <!-- METRICS / STATS CARDS -->
+        <!-- METRICS CARDS -->
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-            
-            <!-- ĐANG HIỂN THỊ -->
             <div class="bg-indigo-50/40 border border-indigo-100 rounded-2xl p-4 flex items-center justify-between">
                 <div>
                     <p class="text-xs font-bold tracking-wider text-indigo-600 uppercase">ĐANG HIỂN THỊ</p>
@@ -106,7 +83,6 @@
                 </div>
             </div>
 
-            <!-- ĐI TRỄ -->
             <div class="bg-amber-50/40 border border-amber-100 rounded-2xl p-4 flex items-center justify-between">
                 <div>
                     <p class="text-xs font-bold tracking-wider text-amber-600 uppercase">ĐI TRỄ</p>
@@ -117,7 +93,6 @@
                 </div>
             </div>
 
-            <!-- KHÔNG PHÉP -->
             <div class="bg-rose-50/40 border border-rose-100 rounded-2xl p-4 flex items-center justify-between">
                 <div>
                     <p class="text-xs font-bold tracking-wider text-rose-600 uppercase">KHÔNG PHÉP</p>
@@ -128,7 +103,6 @@
                 </div>
             </div>
 
-            <!-- CÓ PHÉP -->
             <div class="bg-emerald-50/40 border border-emerald-100 rounded-2xl p-4 flex items-center justify-between">
                 <div>
                     <p class="text-xs font-bold tracking-wider text-emerald-600 uppercase">CÓ PHÉP</p>
@@ -139,7 +113,6 @@
                 </div>
             </div>
 
-            <!-- ĐÃ CHỌN -->
             <div class="bg-slate-100/60 border border-slate-200 rounded-2xl p-4 flex items-center justify-between col-span-2 sm:col-span-1">
                 <div>
                     <p class="text-xs font-bold tracking-wider text-slate-500 uppercase">ĐÃ CHỌN</p>
@@ -153,21 +126,17 @@
 
         <!-- SEARCH & FILTERS -->
         <div class="bg-white rounded-2xl border border-slate-200/80 p-4 mb-6 shadow-sm flex flex-col md:flex-row gap-3">
-            
-            <!-- SEARCH INPUT -->
             <div class="relative flex-1">
                 <i class="ph ph-magnifying-glass text-slate-400 text-lg absolute left-3.5 top-1/2 -translate-y-1/2"></i>
                 <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Nhập họ tên hoặc mã học sinh..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all">
             </div>
 
-            <!-- FILTER CLASS -->
             <div class="w-full md:w-56">
                 <select id="classFilter" onchange="applyFilters()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all">
                     <option value="">-- Tất cả các lớp --</option>
                 </select>
             </div>
 
-            <!-- FILTER STATUS -->
             <div class="w-full md:w-56">
                 <select id="statusFilter" onchange="applyFilters()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all">
                     <option value="">-- Tất cả trạng thái --</option>
@@ -179,7 +148,7 @@
             </div>
         </div>
 
-        <!-- TABLE SECTION -->
+        <!-- TABLE -->
         <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -196,19 +165,15 @@
                             <th class="py-4 px-4 text-center">Trạng thái hiện tại</th>
                         </tr>
                     </thead>
-                    <tbody id="studentTableBody" class="divide-y divide-slate-100 text-sm">
-                        <!-- Render bằng JS -->
-                    </tbody>
+                    <tbody id="studentTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
                 </table>
             </div>
 
-            <!-- LOADING STATE -->
             <div id="loadingState" class="py-12 text-center">
                 <div class="inline-block w-8 h-8 border-3 border-sky-600 border-t-transparent rounded-full animate-spin"></div>
                 <p class="text-slate-500 text-sm mt-3">Đang đồng bộ dữ liệu từ Google Sheet...</p>
             </div>
 
-            <!-- EMPTY STATE -->
             <div id="emptyState" class="py-12 text-center hidden">
                 <i class="ph ph-folder-open text-4xl text-slate-300"></i>
                 <p class="text-slate-500 text-sm mt-2">Không tìm thấy dữ liệu học sinh phù hợp.</p>
@@ -216,88 +181,75 @@
         </div>
     </main>
 
-    <!-- NOTIFICATION TOAST -->
+    <!-- TOAST -->
     <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-2 text-sm transform translate-y-20 opacity-0 transition-all duration-300 z-50">
         <i class="ph ph-info text-lg text-sky-400" id="toastIcon"></i>
         <span id="toastMsg">Thông báo</span>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
+    <!-- JAVASCRIPT LOGIC WITH JSONP -->
     <script>
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyM394lmbkOpjRzGWUDGSLLzPIzvf-FE0fDbQsUmUxxAMuKdA1mIg2E-inscbIbNIWs7w/exec";
-        const CACHE_KEY = "STU_ATTENDANCE_V4";
+        const CACHE_KEY = "STU_ATTENDANCE_V5";
 
         let allStudents = [];
         let filteredStudents = [];
         let selectedStudentIds = new Set();
 
-        // TẢI DỮ LIỆU ĐƯỢC KHẮC PHỤC HOÀN TOÀN
-        async function fetchData(forceReload = false) {
+        // NẠP DỮ LIỆU QUA CƠ CHẾ JSONP CHỐNG LỖI MẠNG / CORS
+        function fetchData(forceReload = false) {
             const reloadIcon = document.getElementById('reloadIcon');
             const loadingState = document.getElementById('loadingState');
-            
             if (reloadIcon) reloadIcon.classList.add('animate-spin');
 
-            // 1. CHỈ HIỂN THỊ CACHE NẾU MẢNG CÓ DỮ LIỆU THỰC SỰ
+            // Hiển thị dữ liệu tạm từ cache nếu có
             const cachedData = localStorage.getItem(CACHE_KEY);
-            let hasValidCache = false;
-
             if (cachedData && !forceReload) {
                 try {
                     const parsed = JSON.parse(cachedData);
                     if (Array.isArray(parsed) && parsed.length > 0) {
                         allStudents = parsed;
-                        hasValidCache = true;
                         document.getElementById('totalFileHs').innerText = allStudents.length;
                         populateClassDropdown();
                         applyFilters();
                         if (loadingState) loadingState.classList.add('hidden');
                     }
-                } catch(e) {
-                    localStorage.removeItem(CACHE_KEY);
-                }
+                } catch(e) {}
+            } else {
+                if (loadingState) loadingState.classList.remove('hidden');
             }
 
-            if (!hasValidCache && loadingState) {
-                loadingState.classList.remove('hidden');
-            }
+            // Tạo Script Element để gọi JSONP
+            const oldScript = document.getElementById('jsonp_script');
+            if (oldScript) oldScript.remove();
 
-            // 2. GỌI TRỰC TIẾP API BẰNG FETCH CHUẨN XỬ LÝ REDIRECT
-            try {
-                const response = await fetch(APPS_SCRIPT_URL);
-                if (!response.ok) throw new Error("Mạng bị lỗi hoặc Google từ chối kết nối");
+            window.handleSheetData = function(data) {
+                if (reloadIcon) reloadIcon.classList.remove('animate-spin');
+                if (loadingState) loadingState.classList.add('hidden');
 
-                const data = await response.json();
-                
                 if (Array.isArray(data) && data.length > 0) {
                     allStudents = data;
                     localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-                    
                     document.getElementById('totalFileHs').innerText = allStudents.length;
                     populateClassDropdown();
                     applyFilters();
-
-                    if (forceReload) {
-                        showToast("Đã cập nhật dữ liệu mới nhất thành công!", "success");
-                    }
+                    if (forceReload) showToast("Đã kết nối và cập nhật thành công!", "success");
                 } else {
-                    console.warn("Dữ liệu trả về từ Apps Script rỗng");
-                    if (!hasValidCache) {
-                        showToast("Sheet rỗng hoặc chưa khớp định dạng cột!", "warning");
-                    }
+                    showToast("Chưa có dữ liệu từ Google Sheet!", "warning");
                 }
-            } catch (err) {
-                console.error("Lỗi khi kết nối Google Apps Script:", err);
-                if (!hasValidCache) {
-                    showToast("Không thể tải dữ liệu từ Google Sheet!", "error");
-                }
-            } finally {
+            };
+
+            const script = document.createElement('script');
+            script.id = 'jsonp_script';
+            script.src = APPS_SCRIPT_URL + "?callback=handleSheetData&t=" + new Date().getTime();
+            script.onerror = function() {
                 if (reloadIcon) reloadIcon.classList.remove('animate-spin');
                 if (loadingState) loadingState.classList.add('hidden');
-            }
+                showToast("Lỗi kết nối tới Google Apps Script!", "error");
+            };
+            document.body.appendChild(script);
         }
 
-        // TẠO DROPDOWN LỚP HỌC
         function populateClassDropdown() {
             const classSelect = document.getElementById('classFilter');
             const currentSelected = classSelect.value;
@@ -310,7 +262,6 @@
             classSelect.innerHTML = html;
         }
 
-        // LỌC DỮ LIỆU
         function applyFilters() {
             const search = document.getElementById('searchInput').value.toLowerCase().trim();
             const selectedClass = document.getElementById('classFilter').value;
@@ -333,7 +284,6 @@
             updateStats();
         }
 
-        // HIỂN THỊ BẢNG DỮ LIỆU
         function renderTable() {
             const tbody = document.getElementById('studentTableBody');
             const emptyState = document.getElementById('emptyState');
@@ -387,7 +337,6 @@
             tbody.innerHTML = html;
         }
 
-        // CẬP NHẬT THỐNG KÊ
         function updateStats() {
             document.getElementById('statDisplay').innerText = filteredStudents.length;
             
@@ -408,13 +357,9 @@
             document.getElementById('statSelected').innerText = selectedStudentIds.size;
         }
 
-        // BẬT / TẮT CHỌN HỌC SINH
         function toggleSelect(id) {
-            if (selectedStudentIds.has(id)) {
-                selectedStudentIds.delete(id);
-            } else {
-                selectedStudentIds.add(id);
-            }
+            if (selectedStudentIds.has(id)) selectedStudentIds.delete(id);
+            else selectedStudentIds.add(id);
             document.getElementById('statSelected').innerText = selectedStudentIds.size;
         }
 
@@ -428,7 +373,6 @@
             document.getElementById('statSelected').innerText = selectedStudentIds.size;
         }
 
-        // GVCN DUYỆT CÓ PHÉP
         function approveSelected() {
             if (selectedStudentIds.size === 0) {
                 showToast("Vui lòng chọn ít nhất 1 học sinh để duyệt!", "warning");
@@ -436,50 +380,39 @@
             }
 
             allStudents.forEach(s => {
-                if (selectedStudentIds.has(s.maHS)) {
-                    s.trangThai = "P";
-                }
+                if (selectedStudentIds.has(s.maHS)) s.trangThai = "P";
             });
 
             localStorage.setItem(CACHE_KEY, JSON.stringify(allStudents));
-
             selectedStudentIds.clear();
             document.getElementById('selectAllCheckbox').checked = false;
             applyFilters();
             showToast("Đã duyệt trạng thái Có Phép thành công!", "success");
         }
 
-        // ADMIN RESET
         function resetData() {
-            if (confirm("Xóa bộ nhớ đệm và tải lại dữ liệu mới từ Google Sheet?")) {
+            if (confirm("Làm mới toàn bộ bộ nhớ đệm và tải lại dữ liệu?")) {
                 localStorage.removeItem(CACHE_KEY);
                 fetchData(true);
             }
         }
 
-        // LINK PHỤ HUYNH
         function copyParentLink() {
             navigator.clipboard.writeText(window.location.href);
             showToast("Đã sao chép link tra cứu Phụ huynh!", "success");
         }
 
-        // THÔNG BÁO TOAST
         function showToast(msg, type = "info") {
             const toast = document.getElementById('toast');
             const toastMsg = document.getElementById('toastMsg');
-            
             toastMsg.innerText = msg;
             toast.classList.remove('translate-y-20', 'opacity-0');
-
             setTimeout(() => {
                 toast.classList.add('translate-y-20', 'opacity-0');
             }, 3000);
         }
 
-        // TẢI DỮ LIỆU KHI MỞ TRANG
-        window.addEventListener('DOMContentLoaded', () => {
-            fetchData(false);
-        });
+        window.addEventListener('DOMContentLoaded', () => fetchData(false));
     </script>
 </body>
 </html>
