@@ -61,7 +61,7 @@
 
                 <!-- TOP ACTION BUTTONS -->
                 <div class="flex flex-wrap items-center gap-2.5">
-                    <button onclick="fetchData()" id="reloadBtn" class="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm" title="Tải lại dữ liệu">
+                    <button onclick="fetchData(true)" id="reloadBtn" class="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm" title="Tải lại dữ liệu trực tiếp từ Google Sheet">
                         <i class="ph ph-arrows-clockwise text-lg" id="reloadIcon"></i>
                     </button>
 
@@ -202,17 +202,18 @@
                         </tr>
                     </thead>
                     <tbody id="studentTableBody" class="divide-y divide-slate-100 text-sm">
-                        <!-- Sẽ render bằng JS -->
+                        <!-- Render bằng JS -->
                     </tbody>
                 </table>
             </div>
 
-            <!-- LOADING / EMPTY STATE -->
-            <div id="loadingState" class="py-12 text-center">
+            <!-- LOADING STATE -->
+            <div id="loadingState" class="py-12 text-center hidden">
                 <div class="inline-block w-8 h-8 border-3 border-sky-600 border-t-transparent rounded-full animate-spin"></div>
-                <p class="text-slate-500 text-sm mt-3">Đang kết nối dữ liệu từ Google Sheet...</p>
+                <p class="text-slate-500 text-sm mt-3">Đang cập nhật dữ liệu mới nhất từ Google Sheet...</p>
             </div>
 
+            <!-- EMPTY STATE -->
             <div id="emptyState" class="py-12 text-center hidden">
                 <i class="ph ph-folder-open text-4xl text-slate-300"></i>
                 <p class="text-slate-500 text-sm mt-2">Không tìm thấy dữ liệu học sinh phù hợp.</p>
@@ -228,53 +229,72 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // CẤU HÌNH API KẾT NỐI GOOGLE APPS SCRIPT WEB APP CỦA BẠN
+        // CẤU HÌNH API KẾT NỐI GOOGLE APPS SCRIPT WEB APP
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyM394lmbkOpjRzGWUDGSLLzPIzvf-FE0fDbQsUmUxxAMuKdA1mIg2E-inscbIbNIWs7w/exec";
+        const CACHE_KEY = "STU_ATTENDANCE_CACHE_V2";
 
         let allStudents = [];
         let filteredStudents = [];
         let selectedStudentIds = new Set();
 
-        // TẢI DỮ LIỆU TỪ SHEET
-        async function fetchData() {
+        // TẢI DỮ LIỆU TỐI ƯU SIÊU NHANH BẰNG LOCALSTORAGE
+        async function fetchData(forceUserReload = false) {
             const reloadIcon = document.getElementById('reloadIcon');
             const loadingState = document.getElementById('loadingState');
-            const emptyState = document.getElementById('emptyState');
-            const tableBody = document.getElementById('studentTableBody');
-
+            
             reloadIcon.classList.add('animate-spin');
-            tableBody.innerHTML = '';
-            loadingState.classList.remove('hidden');
-            emptyState.classList.add('hidden');
 
+            // 1. ĐỌC TỨC THÌ TỪ LOCALSTORAGE (NẾU CÓ)
+            const cachedData = localStorage.getItem(CACHE_KEY);
+            if (cachedData && !forceUserReload) {
+                try {
+                    allStudents = JSON.parse(cachedData);
+                    document.getElementById('totalFileHs').innerText = allStudents.length;
+                    populateClassDropdown();
+                    applyFilters();
+                } catch(e) {
+                    console.error("Cache parse error:", e);
+                }
+            } else if (!cachedData) {
+                loadingState.classList.remove('hidden');
+            }
+
+            // 2. GỌI API GOOGLE APPS SCRIPT ĐỂ CẬP NHẬT DỮ LIỆU MỚI NHẤT
             try {
                 const res = await fetch(APPS_SCRIPT_URL);
                 const data = await res.json();
                 
-                allStudents = data;
-                document.getElementById('totalFileHs').innerText = allStudents.length;
+                if (data && data.length > 0) {
+                    allStudents = data;
+                    // Lưu dữ liệu mới vào bộ nhớ đệm
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+                    
+                    document.getElementById('totalFileHs').innerText = allStudents.length;
+                    populateClassDropdown();
+                    applyFilters();
 
-                populateClassDropdown();
-                applyFilters();
-                showToast("Cập nhật dữ liệu thành công!", "success");
-
+                    if (forceUserReload) {
+                        showToast("Đã đồng bộ thành công dữ liệu từ Google Sheet!", "success");
+                    }
+                }
             } catch (err) {
                 console.error("Lỗi lấy dữ liệu:", err);
-                showToast("Lỗi kết nối tới Google Sheet!", "error");
+                if (!cachedData) showToast("Lỗi kết nối tới Google Sheet!", "error");
             } finally {
                 reloadIcon.classList.remove('animate-spin');
                 loadingState.classList.add('hidden');
             }
         }
 
-        // TẠO DROPDOWN LỚP HỌC DỰA TRÊN DỮ LIỆU
+        // TẠO DROPDOWN LỚP HỌC
         function populateClassDropdown() {
             const classSelect = document.getElementById('classFilter');
+            const currentSelected = classSelect.value;
             const classes = [...new Set(allStudents.map(s => s.lop))].filter(Boolean).sort();
             
             let html = '<option value="">-- Tất cả các lớp (' + classes.length + ') --</option>';
             classes.forEach(c => {
-                html += `<option value="${c}">Lớp ${c}</option>`;
+                html += `<option value="${c}" ${c === currentSelected ? 'selected' : ''}>Lớp ${c}</option>`;
             });
             classSelect.innerHTML = html;
         }
@@ -319,7 +339,6 @@
             filteredStudents.forEach((student, index) => {
                 const isChecked = selectedStudentIds.has(student.maHS);
                 
-                // Render badge trạng thái
                 let badgeClass = "bg-rose-50 text-rose-600 border-rose-200";
                 let statusLabel = "VẮNG KHÔNG PHÉP";
 
@@ -357,7 +376,7 @@
             tbody.innerHTML = html;
         }
 
-        // CẬP NHẬT CÁC CON SỐ THỐNG KÊ
+        // CẬP NHẬT CON SỐ THỐNG KÊ
         function updateStats() {
             document.getElementById('statDisplay').innerText = filteredStudents.length;
             
@@ -378,7 +397,7 @@
             document.getElementById('statSelected').innerText = selectedStudentIds.size;
         }
 
-        // BẬT / TẮT CHỌN HỌC SINH
+        // BẬT/TẮT CHỌN HỌC SINH
         function toggleSelect(id) {
             if (selectedStudentIds.has(id)) {
                 selectedStudentIds.delete(id);
@@ -411,6 +430,9 @@
                 }
             });
 
+            // Cập nhật lại bộ nhớ đệm
+            localStorage.setItem(CACHE_KEY, JSON.stringify(allStudents));
+
             selectedStudentIds.clear();
             document.getElementById('selectAllCheckbox').checked = false;
             applyFilters();
@@ -419,8 +441,9 @@
 
         // ADMIN RESET
         function resetData() {
-            if (confirm("Bạn có chắc chắn muốn đặt lại dữ liệu ban đầu?")) {
-                fetchData();
+            if (confirm("Bạn có chắc chắn muốn đặt lại và tải mới toàn bộ dữ liệu?")) {
+                localStorage.removeItem(CACHE_KEY);
+                fetchData(true);
             }
         }
 
@@ -444,7 +467,7 @@
         }
 
         // KHỞI CHẠY TẢI DỮ LIỆU KHI TRANG LÊN
-        window.addEventListener('DOMContentLoaded', fetchData);
+        window.addEventListener('DOMContentLoaded', () => fetchData(false));
     </script>
 </body>
 </html>
