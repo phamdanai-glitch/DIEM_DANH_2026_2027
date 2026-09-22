@@ -56,7 +56,8 @@
                     <option value="">-- Tất cả trạng thái --</option>
                     <option value="ĐÚNG GIỜ">Đúng giờ (&lt; 07:00)</option>
                     <option value="ĐI TRỄ">Đi trễ (&ge; 07:00)</option>
-                    <option value="VẮNG">Vắng mặt</option>
+                    <option value="VẮNG CÓ PHÉP">Vắng có phép</option>
+                    <option value="VẮNG KHÔNG PHÉP">Vắng không phép</option>
                 </select>
             </div>
         </div>
@@ -92,8 +93,8 @@
     </main>
 
     <script>
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykyMV89kjIoh-0GAFQAXSAZ6mgafBnAlkzn0P-xTvzjtmABP0OrMPr_p3ewIT9_j8oGw/exec";
-        const LOCAL_STORAGE_KEY = "FAST_STUDENT_CACHE_V2";
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyM394lmbkOpjRzGWUDGSLLzPIzvf-FE0fDbQsUmUxxAMuKdA1mIg2E-inscbIbNIWs7w/exec";
+        const LOCAL_STORAGE_KEY = "FAST_STUDENT_CACHE_V4";
         
         let allStudents = [];
         let filteredStudents = [];
@@ -186,7 +187,7 @@
 
             filteredStudents.forEach((s, idx) => {
                 let badgeStyle = "bg-rose-50 text-rose-700 border-rose-200";
-                let statusText = "Vắng mặt";
+                let statusText = "Vắng không phép";
 
                 if (s.trangThai === 'ĐÚNG GIỜ') {
                     badgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-200";
@@ -194,6 +195,9 @@
                 } else if (s.trangThai === 'ĐI TRỄ') {
                     badgeStyle = "bg-amber-50 text-amber-700 border-amber-200";
                     statusText = "Đi trễ";
+                } else if (s.trangThai === 'VẮNG CÓ PHÉP') {
+                    badgeStyle = "bg-sky-50 text-sky-700 border-sky-200";
+                    statusText = "Vắng có phép";
                 }
 
                 html += `
