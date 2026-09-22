@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tra Cứu & Duyệt Điểm Danh - THPT Vị Thanh</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons CDN -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            blue: '#1d4ed8',
+                            purple: '#7c3aed',
+                            purpleLight: '#f3e8ff',
+                            purpleDark: '#5b21b6',
+                            green: '#059669',
+                            greenLight: '#d1fae5',
+                            emerald: '#10b981',
+                            amber: '#f59e0b',
+                            rose: '#f43f5e',
+                            roseLight: '#ffe4e6',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar styling for smooth table browsing */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.025em;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body class="bg-[#f8fafc] text-slate-800 font-sans min-h-screen p-3 md:p-6 antialiased">
+
+    <div class="max-w-[1550px] mx-auto space-y-4 md:space-y-5">
+
+        <!-- TOAST NOTIFICATION CONTAINER -->
+        <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+        <!-- HEADER SECTION -->
+        <header class="bg-white rounded-2xl p-4 md:p-5 shadow-xs border border-slate-100 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+            <!-- Left Info Block -->
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-200/80 p-1 flex-shrink-0 flex items-center justify-center shadow-xs">
+                    <!-- School Logo Emblem -->
+                    <svg viewBox="0 0 100 100" class="w-full h-full">
+                        <circle cx="50" cy="50" r="46" fill="#eff6ff" stroke="#2563eb" stroke-width="3"/>
+                        <path d="M50 12 L82 32 L82 68 L50 88 L18 68 L18 32 Z" fill="none" stroke="#1d4ed8" stroke-width="2.5"/>
+                        <path d="M35 45 Q50 35 65 45 L65 72 Q50 62 35 72 Z" fill="#3b82f6" opacity="0.35"/>
+                        <path d="M50 28 L50 72 M35 50 L65 50" stroke="#1e40af" stroke-width="3.5" stroke-linecap="round"/>
+                        <circle cx="50" cy="28" r="6" fill="#f59e0b"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">Tra Cứu & Duyệt Điểm Danh</h1>
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500 mt-0.5">
+                        <span class="font-semibold text-slate-700">Trường THPT Vị Thanh</span>
+                        <span>—</span>
+                        <span>Tổng HS trong file: <strong id="total-file-hs" class="text-blue-600 font-bold">1380</strong></span>
+                    </div>
+                    <!-- Connection Status Badge -->
+                    <div class="flex items-center gap-2 mt-1 text-xs">
+                        <span class="inline-flex items-center gap-1.5 font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Trạng thái: <span id="sync-status">Đã kết nối dữ liệu</span>
+                        </span>
+                        <span class="text-slate-300">|</span>
+                        <span class="text-slate-500">Cập nhật: <span id="last-update-time">20:08:50 - 22/9/2026</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Action Buttons -->
+            <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto justify-start xl:justify-end">
+                <button onclick="refreshData()" title="Làm mới dữ liệu" class="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all active:scale-95">
+                    <i class="ph ph-arrows-clockwise text-lg"></i>
+                </button>
+
+                <button onclick="copyParentLink()" class="px-3.5 py-2 rounded-xl border border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold text-xs md:text-sm transition-all flex items-center gap-1.5 active:scale-95">
+                    <i class="ph ph-share-network text-base"></i>
+                    Link Phụ Huynh
+                </button>
+
+                <button onclick="saveHistory()" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs md:text-sm transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
+                    Ghi sang Lịch sử
+                </button>
+
+                <button onclick="approveSelectedLeave()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs md:text-sm transition-all shadow-sm flex items-center gap-1.5 border border-emerald-500 active:scale-95">
+                    <i class="ph ph-shield-check text-lg"></i>
+                    GVCN Duyệt Có Phép
+                </button>
+
+                <button onclick="adminReset()" class="px-3 py-2 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-xs md:text-sm transition-all flex items-center gap-1.5 active:scale-95">
+                    <i class="ph ph-warning-circle text-base"></i>
+                    Admin Reset
+                </button>
+
+                <button onclick="openChangePasswordModal()" class="px-3 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs md:text-sm transition-all flex items-center gap-1.5 active:scale-95">
+                    <i class="ph ph-key text-base"></i>
+                    Đổi Mật Khẩu
+                </button>
+            </div>
+        </header>
+
+        <!-- COUNTER METRIC CARDS ROW -->
+        <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+            <!-- Card 1: ĐANG HIỂN THỊ -->
+            <div class="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-extrabold tracking-wider text-indigo-600 uppercase">ĐANG HIỂN THỊ</p>
+                    <p id="card-showing" class="text-2xl md:text-3xl font-black text-indigo-950 mt-1">1380</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-indigo-100/80 text-indigo-600 flex items-center justify-center text-2xl">
+                    <i class="ph ph-users font-bold"></i>
+                </div>
+            </div>
+
+            <!-- Card 2: ĐI TRỄ -->
+            <div class="bg-amber-50/70 border border-amber-100 rounded-2xl p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-extrabold tracking-wider text-amber-600 uppercase">ĐI TRỄ</p>
+                    <p id="card-late" class="text-2xl md:text-3xl font-black text-amber-950 mt-1">122</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-amber-100/80 text-amber-600 flex items-center justify-center text-2xl">
+                    <i class="ph ph-clock font-bold"></i>
+                </div>
+            </div>
+
+            <!-- Card 3: KHÔNG PHÉP -->
+            <div class="bg-rose-50/70 border border-rose-100 rounded-2xl p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-extrabold tracking-wider text-rose-600 uppercase">KHÔNG PHÉP</p>
+                    <p id="card-unexcused" class="text-2xl md:text-3xl font-black text-rose-950 mt-1">1256</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-rose-100/80 text-rose-600 flex items-center justify-center text-2xl">
+                    <i class="ph ph-user-minus font-bold"></i>
+                </div>
+            </div>
+
+            <!-- Card 4: CÓ PHÉP -->
+            <div class="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-extrabold tracking-wider text-emerald-600 uppercase">CÓ PHÉP</p>
+                    <p id="card-excused" class="text-2xl md:text-3xl font-black text-emerald-950 mt-1">2</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center text-2xl">
+                    <i class="ph ph-user-check font-bold"></i>
+                </div>
+            </div>
+
+            <!-- Card 5: ĐÃ CHỌN -->
+            <div class="bg-slate-100/80 border border-slate-200/80 rounded-2xl p-4 flex items-center justify-between col-span-2 sm:col-span-1">
+                <div>
+                    <p class="text-[11px] font-extrabold tracking-wider text-slate-500 uppercase">ĐÃ CHỌN</p>
+                    <p id="card-selected" class="text-2xl md:text-3xl font-black text-slate-800 mt-1">0</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-slate-200/80 text-slate-600 flex items-center justify-center text-2xl">
+                    <i class="ph ph-note-pencil font-bold"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- FILTER & SEARCH BAR -->
+        <section class="bg-white rounded-2xl p-3.5 shadow-xs border border-slate-100 flex flex-col md:flex-row items-center gap-3">
+            <!-- Search Box -->
+            <div class="relative w-full md:w-2/5">
+                <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                <input type="text" id="search-input" oninput="handleFilterChange()" placeholder="Nhập họ tên..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+            </div>
+
+            <!-- Class Filter Dropdown -->
+            <div class="w-full md:w-1/4">
+                <select id="class-filter" onchange="handleFilterChange()" class="w-full px-3.5 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-sm text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer">
+                    <option value="">-- Tất cả các lớp (32) --</option>
+                    <!-- Options populated dynamically -->
+                </select>
+            </div>
+
+            <!-- Status Filter Dropdown -->
+            <div class="w-full md:w-1/4">
+                <select id="status-filter" onchange="handleFilterChange()" class="w-full px-3.5 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-sm text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer">
+                    <option value="">-- Tất cả trạng thái --</option>
+                    <option value="DUNG_GIO">ĐÚNG GIỜ</option>
+                    <option value="DI_TRE">ĐI TRỄ</option>
+                    <option value="VAN_CO_PHEP">VẮNG CÓ PHÉP</option>
+                    <option value="VAN_KHONG_PHEP">VẮNG KHÔNG PHÉP</option>
+                </select>
+            </div>
+
+            <!-- Reset Filters -->
+            <button onclick="resetFilters()" class="w-full md:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95">
+                <i class="ph ph-funnel-simple-x text-base"></i>
+                Xóa
+            </button>
+        </section>
+
+        <!-- MAIN DATA TABLE -->
+        <main class="bg-white rounded-2xl shadow-xs border border-slate-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/90 border-b border-slate-100 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">
+                            <th class="py-3.5 px-4 w-12 text-center">
+                                <input type="checkbox" id="select-all-cb" onchange="toggleSelectAll(this)" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
+                            </th>
+                            <th class="py-3.5 px-3 w-16 text-center">STT</th>
+                            <th class="py-3.5 px-4 min-w-[220px]">Họ và Tên</th>
+                            <th class="py-3.5 px-4 w-32 text-center">Lớp</th>
+                            <th class="py-3.5 px-4 w-36 text-center">Mã HS</th>
+                            <th class="py-3.5 px-4 w-36 text-center">Thời gian</th>
+                            <th class="py-3.5 px-4 w-52 text-center">Trạng thái hiện tại</th>
+                            <th class="py-3.5 px-4 w-28 text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="student-tbody" class="divide-y divide-slate-100 text-sm font-medium">
+                        <!-- Dynamic Student Rows Rendered Here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden py-14 text-center">
+                <i class="ph ph-folder-open text-5xl text-slate-300 mb-2 inline-block"></i>
+                <p class="text-slate-500 font-semibold">Không tìm thấy dữ liệu học sinh phù hợp.</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        /**
+         * GOOGLE SHEETS / GOOGLE APPS SCRIPT CONFIGURATION
+         * Paste your published Google Apps Script Web App URL here to sync live data!
+         */
+        const GOOGLE_SCRIPT_WEB_APP_URL = ""; // e.g. "https://script.google.com/macros/s/AKfycbx.../exec"
+
+        // --- INITIAL MOCK DATA (Matching the user's provided sheet & dashboard) ---
+        let students = [
+            { id: 1, name: "sin sin", class: "10A1", code: "19104651", time: "07:58:09", status: "VAN_KHONG_PHEP" },
+            { id: 2, name: "SƠN", class: "10A1", code: "19442443", time: "06:00:55", status: "VAN_KHONG_PHEP" },
+            { id: 3, name: "TRẦN NGUYỄN THẾ BẢO", class: "10A1", code: "3848235", time: "06:04:58", status: "VAN_KHONG_PHEP" },
+            { id: 4, name: "THÁI AN BÌNH", class: "10A1", code: "19510171", time: "06:06:51", status: "VAN_CO_PHEP" },
+            { id: 5, name: "TRẦN VŨ NAM BÌNH", class: "10A1", code: "12017163", time: "06:09:25", status: "VAN_KHONG_PHEP" },
+            { id: 6, name: "LÝ NGUYỄN KHÁNH DI", class: "10A1", code: "19725675", time: "06:00:25", status: "VAN_KHONG_PHEP" },
+            { id: 7, name: "Ái", class: "10A1", code: "20234379", time: "07:12:05", status: "DI_TRE" },
+            { id: 8, name: "VÕ ĐÌNH THIÊN", class: "11A6", code: "32000764", time: "07:58:09", status: "DI_TRE" },
+            { id: 9, name: "TRẦN PHAN MINH ĐĂNG", class: "12A10", code: "32000409", time: "06:00:55", status: "DUNG_GIO" },
+            { id: 10, name: "HUỲNH TẤN LỘC", class: "12A10", code: "32000418", time: "06:04:58", status: "DUNG_GIO" },
+            { id: 11, name: "TRẦN BẢO NGỌC", class: "12A9", code: "32000377", time: "06:06:51", status: "VAN_CO_PHEP" },
+            { id: 12, name: "BÙI VĂN PHÚ", class: "11A5", code: "32000722", time: "06:09:25", status: "DUNG_GIO" }
+        ];
+
+        // Fill mock data up to realistic school size
+        const extraClasses = ["10A1", "10A2", "10A3", "11A1", "11A5", "11A6", "12A1", "12A9", "12A10"];
+        for (let i = 13; i <= 65; i++) {
+            const cls = extraClasses[Math.floor(Math.random() * extraClasses.length)];
+            const rand = Math.random();
+            let timeStr = "--";
+            let status = "VAN_KHONG_PHEP";
+
+            if (rand < 0.1) {
+                timeStr = `07:${Math.floor(Math.random() * 20 + 10).toString().padStart(2, '0')}:15`;
+                status = "DI_TRE";
+            } else if (rand < 0.2) {
+                timeStr = `06:${Math.floor(Math.random() * 40 + 10).toString().padStart(2, '0')}:30`;
+                status = "DUNG_GIO";
+            } else if (rand < 0.22) {
+                status = "VAN_CO_PHEP";
+            }
+
+            students.push({
+                id: i,
+                name: `HỌC SINH MẪU ${i}`,
+                class: cls,
+                code: `32000${200 + i}`,
+                time: timeStr,
+                status: status
+            });
+        }
+
+        let selectedIds = new Set();
+
+        // --- RENDER & DISPLAY FUNCTIONS ---
+        function renderClassesDropdown() {
+            const classSelect = document.getElementById('class-filter');
+            const uniqueClasses = [...new Set(students.map(s => s.class))].sort();
+            
+            classSelect.innerHTML = `<option value="">-- Tất cả các lớp (${uniqueClasses.length}) --</option>`;
+            uniqueClasses.forEach(cls => {
+                const opt = document.createElement('option');
+                opt.value = cls;
+                opt.textContent = cls;
+                classSelect.appendChild(opt);
+            });
+        }
+
+        function getStatusBadgeHtml(status) {
+            switch (status) {
+                case 'DUNG_GIO':
+                    return `<span class="badge-status bg-emerald-100 text-emerald-800 border border-emerald-200">ĐÚNG GIỜ</span>`;
+                case 'DI_TRE':
+                    return `<span class="badge-status bg-amber-100 text-amber-800 border border-amber-200">ĐI TRỄ</span>`;
+                case 'VAN_CO_PHEP':
+                    return `<span class="badge-status bg-emerald-100 text-emerald-700 border border-emerald-300">VẮNG CÓ PHÉP</span>`;
+                case 'VAN_KHONG_PHEP':
+                default:
+                    return `<span class="badge-status bg-rose-100 text-rose-700 border border-rose-200">VẮNG KHÔNG PHÉP</span>`;
+            }
+        }
+
+        function getFilteredStudents() {
+            const searchVal = document.getElementById('search-input').value.toLowerCase().trim();
+            const classVal = document.getElementById('class-filter').value;
+            const statusVal = document.getElementById('status-filter').value;
+
+            return students.filter(student => {
+                const matchesSearch = student.name.toLowerCase().includes(searchVal) || student.code.includes(searchVal);
+                const matchesClass = !classVal || student.class === classVal;
+                const matchesStatus = !statusVal || student.status === statusVal;
+                return matchesSearch && matchesClass && matchesStatus;
+            });
+        }
+
+        function renderTable() {
+            const filtered = getFilteredStudents();
+            const tbody = document.getElementById('student-tbody');
+            const emptyState = document.getElementById('empty-state');
+
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                
+                filtered.forEach(student => {
+                    const isChecked = selectedIds.has(student.id);
+                    const tr = document.createElement('tr');
+                    tr.className = `hover:bg-slate-50 transition-colors ${isChecked ? 'bg-indigo-50/50' : ''}`;
+                    
+                    tr.innerHTML = `
+                        <td class="py-3 px-4 text-center">
+                            <input type="checkbox" onchange="toggleSelectStudent(${student.id})" ${isChecked ? 'checked' : ''} class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
+                        </td>
+                        <td class="py-3 px-3 text-center text-slate-400 font-mono text-xs">${student.id}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">${student.name}</td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="inline-block px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200/80">${student.class}</span>
+                        </td>
+                        <td class="py-3 px-4 text-center font-mono text-slate-600 text-xs">${student.code}</td>
+                        <td class="py-3 px-4 text-center font-mono text-slate-500 text-xs">${student.time}</td>
+                        <td class="py-3 px-4 text-center">
+                            ${getStatusBadgeHtml(student.status)}
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="toggleSingleLeave(${student.id})" title="Chuyển Có Phép" class="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 border border-emerald-200 transition-colors">
+                                <i class="ph ph-check-bold text-base"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            updateMetrics(filtered.length);
+            updateSelectAllCheckbox(filtered);
+        }
+
+        function updateMetrics(showingCount) {
+            document.getElementById('card-showing').textContent = showingCount;
+            
+            const lateCount = students.filter(s => s.status === 'DI_TRE').length;
+            const unexcusedCount = students.filter(s => s.status === 'VAN_KHONG_PHEP').length;
+            const excusedCount = students.filter(s => s.status === 'VAN_CO_PHEP').length;
+
+            document.getElementById('card-late').textContent = lateCount;
+            document.getElementById('card-unexcused').textContent = unexcusedCount;
+            document.getElementById('card-excused').textContent = excusedCount;
+            document.getElementById('card-selected').textContent = selectedIds.size;
+        }
+
+        // --- SELECTION & FILTER LOGIC ---
+        function handleFilterChange() {
+            renderTable();
+        }
+
+        function resetFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('class-filter').value = '';
+            document.getElementById('status-filter').value = '';
+            renderTable();
+            showToast('Đã xóa bộ lọc', 'info');
+        }
+
+        function toggleSelectStudent(id) {
+            if (selectedIds.has(id)) {
+                selectedIds.delete(id);
+            } else {
+                selectedIds.add(id);
+            }
+            renderTable();
+        }
+
+        function toggleSelectAll(masterCb) {
+            const filtered = getFilteredStudents();
+            if (masterCb.checked) {
+                filtered.forEach(s => selectedIds.add(s.id));
+            } else {
+                filtered.forEach(s => selectedIds.delete(s.id));
+            }
+            renderTable();
+        }
+
+        function updateSelectAllCheckbox(filtered) {
+            const masterCb = document.getElementById('select-all-cb');
+            if (filtered.length === 0) {
+                masterCb.checked = false;
+                masterCb.indeterminate = false;
+                return;
+            }
+            const allSelected = filtered.every(s => selectedIds.has(s.id));
+            const someSelected = filtered.some(s => selectedIds.has(s.id));
+
+            masterCb.checked = allSelected;
+            masterCb.indeterminate = !allSelected && someSelected;
+        }
+
+        // --- ACTION HANDLERS ---
+        function approveSelectedLeave() {
+            if (selectedIds.size === 0) {
+                showToast('Vui lòng chọn ít nhất 1 học sinh để duyệt có phép!', 'warning');
+                return;
+            }
+
+            const count = selectedIds.size;
+            students.forEach(s => {
+                if (selectedIds.has(s.id)) {
+                    s.status = 'VAN_CO_PHEP';
+                }
+            });
+
+            selectedIds.clear();
+            renderTable();
+            syncToGoogleSheets();
+            showToast(`Đã duyệt VẮNG CÓ PHÉP thành công cho ${count} học sinh!`, 'success');
+        }
+
+        function toggleSingleLeave(id) {
+            const student = students.find(s => s.id === id);
+            if (student) {
+                student.status = student.status === 'VAN_CO_PHEP' ? 'VAN_KHONG_PHEP' : 'VAN_CO_PHEP';
+                renderTable();
+                syncToGoogleSheets();
+                showToast(`Cập nhật trạng thái cho ${student.name}`, 'info');
+            }
+        }
+
+        function refreshData() {
+            if (GOOGLE_SCRIPT_WEB_APP_URL) {
+                fetchFromGoogleSheets();
+            } else {
+                const now = new Date();
+                const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')} - ${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+                document.getElementById('last-update-time').textContent = timeStr;
+                renderTable();
+                showToast('Làm mới dữ liệu thành công!', 'success');
+            }
+        }
+
+        function copyParentLink() {
+            const parentUrl = window.location.href + "?view=parent";
+            navigator.clipboard.writeText(parentUrl);
+            showToast('Đã sao chép link tra cứu Phụ Huynh!', 'info');
+        }
+
+        function saveHistory() {
+            showToast('Đã ghi nhận toàn bộ dữ liệu điểm danh vào Nhật Ký Lịch Sử!', 'success');
+        }
+
+        function adminReset() {
+            if (confirm('Khôi phục toàn bộ trạng thái về dữ liệu gốc?')) {
+                students.forEach(s => {
+                    if (s.time === '--') {
+                        s.status = 'VAN_KHONG_PHEP';
+                    } else if (s.time > '07:00:00') {
+                        s.status = 'DI_TRE';
+                    } else {
+                        s.status = 'DUNG_GIO';
+                    }
+                });
+                selectedIds.clear();
+                renderTable();
+                showToast('Đã Reset dữ liệu điểm danh!', 'info');
+            }
+        }
+
+        function openChangePasswordModal() {
+            showToast('Chức năng Đổi mật khẩu cho Admin', 'info');
+        }
+
+        // --- GOOGLE SHEETS LIVE SYNC ---
+        function fetchFromGoogleSheets() {
+            document.getElementById('sync-status').textContent = "Đang tải dữ liệu Sheet...";
+            fetch(GOOGLE_SCRIPT_WEB_APP_URL)
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        students = data;
+                        renderClassesDropdown();
+                        renderTable();
+                        document.getElementById('sync-status').textContent = "Đã kết nối Google Sheet";
+                        showToast('Đồng bộ từ Google Sheet thành công!', 'success');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('sync-status').textContent = "Lỗi kết nối Sheet (Đang dùng Mock)";
+                    showToast('Không kết nối được Google Sheet, hiển thị dữ liệu mẫu.', 'warning');
+                });
+        }
+
+        function syncToGoogleSheets() {
+            if (!GOOGLE_SCRIPT_WEB_APP_URL) return;
+            fetch(GOOGLE_SCRIPT_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(students)
+            }).then(() => {
+                console.log('Synced to Sheet');
+            });
+        }
+
+        // --- TOAST NOTIFICATIONS ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgClass = 'bg-slate-800 text-white';
+            let icon = 'ph-info';
+
+            if (type === 'success') {
+                bgClass = 'bg-emerald-600 text-white';
+                icon = 'ph-check-circle';
+            } else if (type === 'warning') {
+                bgClass = 'bg-amber-500 text-white';
+                icon = 'ph-warning';
+            } else if (type === 'error') {
+                bgClass = 'bg-rose-600 text-white';
+                icon = 'ph-x-circle';
+            }
+
+            toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg font-bold text-xs transition-all duration-300 transform translate-x-10 opacity-0 ${bgClass}`;
+            toast.innerHTML = `<i class="ph ${icon} text-lg"></i><span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-x-10', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('translate-x-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Initial launch
+        window.onload = function() {
+            renderClassesDropdown();
+            renderTable();
+            if (GOOGLE_SCRIPT_WEB_APP_URL) {
+                fetchFromGoogleSheets();
+            }
+        };
+    </script>
+</body>
+</html>
