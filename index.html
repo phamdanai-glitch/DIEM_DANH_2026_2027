@@ -41,11 +41,11 @@
           <p id="stat-dung-gio" class="text-2xl font-bold text-blue-600 mt-1">0</p>
         </div>
         <div class="bg-yellow-50/50 border border-yellow-100 p-4 rounded-xl">
-          <p class="text-xs font-semibold text-gray-500 uppercase">Đi trễ</p>
+          <p class="text-xs font-semibold text-gray-500 uppercase">Trễ</p>
           <p id="stat-di-tre" class="text-2xl font-bold text-yellow-600 mt-1">0</p>
         </div>
         <div class="bg-red-50/50 border border-red-100 p-4 rounded-xl">
-          <p class="text-xs font-semibold text-gray-500 uppercase">Không phép / Vắng</p>
+          <p class="text-xs font-semibold text-gray-500 uppercase">Không phép</p>
           <p id="stat-vang" class="text-2xl font-bold text-red-600 mt-1">0</p>
         </div>
         <div class="bg-green-50/50 border border-green-100 p-4 rounded-xl col-span-2 md:col-span-1">
@@ -57,7 +57,7 @@
       <!-- FILTERS -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div class="relative">
-          <input type="text" id="search-input" onkeyup="filterData()" placeholder="Tìm kiếm theo tên, mã HS..." class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500">
+          <input type="text" id="search-input" onkeyup="filterData()" placeholder="Tìm kiếm theo tên, mã số..." class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500">
           <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </div>
         <div>
@@ -68,8 +68,8 @@
         <div>
           <select id="filter-status" onchange="filterData()" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 text-gray-600">
             <option value="">-- Tất cả trạng thái --</option>
-            <option value="Có mặt">Có mặt</option>
-            <option value="Đi trễ">Đi trễ</option>
+            <option value="Đúng giờ">Đúng giờ</option>
+            <option value="Trễ">Trễ</option>
             <option value="Không phép">Không phép</option>
           </select>
         </div>
@@ -81,9 +81,9 @@
           <thead>
             <tr class="bg-gray-50/70 border-b border-gray-100 text-xs uppercase text-gray-500 tracking-wider">
               <th class="py-3 px-4 font-semibold w-16">STT</th>
+              <th class="py-3 px-4 font-semibold w-36">Mã số</th>
               <th class="py-3 px-4 font-semibold">Họ và Tên</th>
               <th class="py-3 px-4 font-semibold w-28">Lớp</th>
-              <th class="py-3 px-4 font-semibold w-36">Mã HS</th>
               <th class="py-3 px-4 font-semibold w-48">Thời Gian</th>
               <th class="py-3 px-4 font-semibold w-36 text-center">Trạng Thái</th>
             </tr>
@@ -99,14 +99,14 @@
     </div>
 
     <script>
-      // Thay thế đường dẫn Web App /exec của Google Apps Script của bạn vào đây
-      const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyMr1nSgj9Xc0mQ77Wpg9PB7XSb14q2qMmtSEYmohw7LYURYJQzwdI4SaVPzYLEIp0rJg/exec";
+      // Thay đường dẫn Web App /exec của bạn vào đây
+      const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyMr1nSgj9Xc0mQ77Wpg9PB7XSb14q2qMmtSEYmohw7LYURYJQzwdl4SaVPZLElp0rJg/exec";
 
       let globalData = [];
 
       function loadData() {
         document.getElementById('update-time').innerText = new Date().toLocaleTimeString();
-        document.getElementById('table-body').innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">Đang đồng bộ dữ liệu từ Google Sheets...</td></tr>';
+        document.getElementById('table-body').innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">Đang đồng bộ dữ liệu...</td></tr>';
 
         fetch(GAS_API_URL)
           .then(response => response.json())
@@ -125,7 +125,7 @@
 
       function onDataLoaded(data) {
         if (!data || data.length <= 1) {
-          document.getElementById('table-body').innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">Sheet Data hiện chưa có dữ liệu học sinh.</td></tr>';
+          document.getElementById('table-body').innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">Chưa có dữ liệu học sinh.</td></tr>';
           return;
         }
 
@@ -146,18 +146,18 @@
 
       function updateStats(data) {
         const total = data.length;
-        let dungGio = 0, diTre = 0, vang = 0;
+        let dungGio = 0, diTre = 0, khongPhep = 0;
 
         data.forEach(row => {
           let status = String(row[5] || '').toLowerCase();
-          if (status.includes('có mặt')) dungGio++;
+          if (status.includes('đúng giờ') || status.includes('có mặt')) dungGio++;
           else if (status.includes('trễ')) diTre++;
-          else vang++;
+          else khongPhep++;
         });
 
         document.getElementById('stat-dung-gio').innerText = dungGio;
         document.getElementById('stat-di-tre').innerText = diTre;
-        document.getElementById('stat-vang').innerText = vang;
+        document.getElementById('stat-vang').innerText = khongPhep;
         document.getElementById('stat-tong').innerText = total;
         document.getElementById('count-display').innerText = `${total} / ${total}`;
       }
@@ -165,13 +165,13 @@
       function renderTable(data) {
         const tbody = document.getElementById('table-body');
         if (data.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">Không tìm thấy dữ liệu học sinh phù hợp.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">Không tìm thấy học sinh phù hợp.</td></tr>';
           return;
         }
 
         let html = '';
         data.forEach((row, index) => {
-          let maHS = row[0] || '';
+          let maSo = row[0] || '';
           let hoTen = row[1] || '';
           let lop = row[2] || '';
           let ngay = row[3] || '';
@@ -182,14 +182,14 @@
           let badgeColor = 'bg-blue-50 text-blue-700 border-blue-100';
           let stLower = trangThai.toLowerCase();
           if (stLower.includes('trễ')) badgeColor = 'bg-yellow-50 text-yellow-700 border-yellow-100';
-          if (stLower.includes('không phép') || stLower.includes('vắng')) badgeColor = 'bg-red-50 text-red-700 border-red-100';
+          if (stLower.includes('không phép')) badgeColor = 'bg-red-50 text-red-700 border-red-100';
 
           html += `
             <tr class="hover:bg-gray-50/50 transition-colors">
               <td class="py-3 px-4 text-gray-400 font-medium">${index + 1}</td>
+              <td class="py-3 px-4 text-gray-600 font-mono text-xs">${maSo}</td>
               <td class="py-3 px-4 font-semibold text-gray-800 uppercase">${hoTen}</td>
               <td class="py-3 px-4"><span class="px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-semibold">${lop}</span></td>
-              <td class="py-3 px-4 text-gray-600 font-mono text-xs">${maHS}</td>
               <td class="py-3 px-4 text-gray-500 text-xs">${thoiGian}</td>
               <td class="py-3 px-4 text-center">
                 <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold border ${badgeColor}">${trangThai}</span>
@@ -206,12 +206,12 @@
         const selectedStatus = document.getElementById('filter-status').value;
 
         const filtered = globalData.filter(row => {
-          let maHS = String(row[0] || '').toLowerCase();
+          let maSo = String(row[0] || '').toLowerCase();
           let hoTen = String(row[1] || '').toLowerCase();
           let lop = String(row[2] || '');
           let trangThai = String(row[5] || '');
 
-          let matchKeyword = hoTen.includes(keyword) || maHS.includes(keyword);
+          let matchKeyword = hoTen.includes(keyword) || maSo.includes(keyword);
           let matchClass = !selectedClass || lop === selectedClass;
           let matchStatus = !selectedStatus || trangThai.includes(selectedStatus);
 
