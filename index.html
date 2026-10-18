@@ -37,7 +37,7 @@
       <!-- STATS CARDS -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl">
-          <p class="text-xs font-semibold text-gray-500 uppercase">Có mặt / Đúng giờ</p>
+          <p class="text-xs font-semibold text-gray-500 uppercase">Đúng giờ</p>
           <p id="stat-dung-gio" class="text-2xl font-bold text-blue-600 mt-1">0</p>
         </div>
         <div class="bg-yellow-50/50 border border-yellow-100 p-4 rounded-xl">
@@ -81,11 +81,11 @@
           <thead>
             <tr class="bg-gray-50/70 border-b border-gray-100 text-xs uppercase text-gray-500 tracking-wider">
               <th class="py-3 px-4 font-semibold w-16">STT</th>
-              <th class="py-3 px-4 font-semibold w-36">Mã số</th>
-              <th class="py-3 px-4 font-semibold">Họ và Tên</th>
-              <th class="py-3 px-4 font-semibold w-28">Lớp</th>
-              <th class="py-3 px-4 font-semibold w-48">Thời Gian</th>
-              <th class="py-3 px-4 font-semibold w-36 text-center">Trạng Thái</th>
+              <th class="py-3 px-4 font-semibold w-36">Mã số (I)</th>
+              <th class="py-3 px-4 font-semibold">Họ và Tên (J)</th>
+              <th class="py-3 px-4 font-semibold w-28">Lớp (K)</th>
+              <th class="py-3 px-4 font-semibold w-36">Thời gian (E)</th>
+              <th class="py-3 px-4 font-semibold w-36 text-center">Trạng thái (F)</th>
             </tr>
           </thead>
           <tbody id="table-body" class="divide-y divide-gray-100 text-sm text-gray-700">
@@ -99,7 +99,6 @@
     </div>
 
     <script>
-      // Thay đường dẫn Web App /exec của bạn vào đây
       const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyMr1nSgj9Xc0mQ77Wpg9PB7XSb14q2qMmtSEYmohw7LYURYJQzwdI4SaVPzYLEIp0rJg/exec";
 
       let globalData = [];
@@ -149,7 +148,7 @@
         let dungGio = 0, diTre = 0, khongPhep = 0;
 
         data.forEach(row => {
-          let status = String(row[5] || '').toLowerCase();
+          let status = String(row[4] || '').toLowerCase(); // Cột F (index 4 trong mảng trả về)
           if (status.includes('đúng giờ') || status.includes('có mặt')) dungGio++;
           else if (status.includes('trễ')) diTre++;
           else khongPhep++;
@@ -174,15 +173,18 @@
           let maSo = row[0] || '';
           let hoTen = row[1] || '';
           let lop = row[2] || '';
-          let ngay = row[3] || '';
-          let gio = row[4] || '';
-          let trangThai = row[5] || 'Không phép';
-          let thoiGian = (ngay || gio) ? `${gio} - ${ngay}` : '---';
+          let thoiGian = row[3] || '---';      // Cột E (Thời gian) riêng biệt
+          let trangThai = row[4] || '---';    // Cột F (Trạng thái) riêng biệt
 
-          let badgeColor = 'bg-blue-50 text-blue-700 border-blue-100';
+          let badgeColor = 'bg-gray-100 text-gray-700 border-gray-200';
           let stLower = trangThai.toLowerCase();
-          if (stLower.includes('trễ')) badgeColor = 'bg-yellow-50 text-yellow-700 border-yellow-100';
-          if (stLower.includes('không phép')) badgeColor = 'bg-red-50 text-red-700 border-red-100';
+          if (stLower.includes('đúng giờ') || stLower.includes('có mặt')) {
+            badgeColor = 'bg-blue-50 text-blue-700 border-blue-100';
+          } else if (stLower.includes('trễ')) {
+            badgeColor = 'bg-yellow-50 text-yellow-700 border-yellow-100';
+          } else if (stLower.includes('không phép')) {
+            badgeColor = 'bg-red-50 text-red-700 border-red-100';
+          }
 
           html += `
             <tr class="hover:bg-gray-50/50 transition-colors">
@@ -190,7 +192,7 @@
               <td class="py-3 px-4 text-gray-600 font-mono text-xs">${maSo}</td>
               <td class="py-3 px-4 font-semibold text-gray-800 uppercase">${hoTen}</td>
               <td class="py-3 px-4"><span class="px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-semibold">${lop}</span></td>
-              <td class="py-3 px-4 text-gray-500 text-xs">${thoiGian}</td>
+              <td class="py-3 px-4 text-gray-600 text-xs font-mono">${thoiGian}</td>
               <td class="py-3 px-4 text-center">
                 <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold border ${badgeColor}">${trangThai}</span>
               </td>
@@ -209,7 +211,7 @@
           let maSo = String(row[0] || '').toLowerCase();
           let hoTen = String(row[1] || '').toLowerCase();
           let lop = String(row[2] || '');
-          let trangThai = String(row[5] || '');
+          let trangThai = String(row[4] || '');
 
           let matchKeyword = hoTen.includes(keyword) || maSo.includes(keyword);
           let matchClass = !selectedClass || lop === selectedClass;
