@@ -48,6 +48,11 @@
               🔄 Tải lại dữ liệu
             </button>
             
+            <!-- NÚT RÚT ĐIỂM DANH (CHỈ HIỆN KHI GVCN ĐÃ ĐĂNG NHẬP) -->
+            <button id="btn-rut-diem-danh" onclick="rutDiemDanh()" class="hidden px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-all shadow-sm flex items-center gap-1.5">
+              <span>📥</span> Rút Điểm Danh
+            </button>
+
             <!-- KHU VỰC ĐĂNG NHẬP GVCN -->
             <div id="auth-container">
               <button onclick="openLoginModal()" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm flex items-center gap-1.5">
@@ -117,7 +122,7 @@
                 <th class="py-3 px-4 font-semibold">Họ và Tên (J)</th>
                 <th class="py-3 px-4 font-semibold w-28">Lớp (K)</th>
                 <th class="py-3 px-4 font-semibold w-36">Thời gian (G)</th>
-                <th class="py-3 px-4 font-semibold w-40 text-center">Trạng thái (F/M)</th>
+                <th class="py-3 px-4 font-semibold w-40 text-center">Trạng thái (L/M)</th>
               </tr>
             </thead>
             <tbody id="table-body" class="divide-y divide-gray-100 text-sm text-gray-700">
@@ -270,7 +275,7 @@
             badgeColor = 'bg-amber-50 text-amber-700 border-amber-100';
           } else if (stLower.includes('có phép')) {
             badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-100';
-          } else if (stLower.includes('tidak') || stLower.includes('không phép')) {
+          } else if (stLower.includes('không phép')) {
             badgeColor = 'bg-rose-50 text-rose-700 border-rose-100';
           }
 
@@ -343,6 +348,9 @@
           document.getElementById('user-container').classList.remove('hidden');
           document.getElementById('logged-in-class').innerText = "GVCN Lớp: " + username;
           
+          // Hiển thị nút Rút điểm danh khi GVCN đăng nhập thành công
+          document.getElementById('btn-rut-diem-danh').classList.remove('hidden');
+
           const classSelect = document.getElementById('filter-class');
           classSelect.value = username;
           classSelect.disabled = true;
@@ -351,6 +359,7 @@
           updateStats(globalData);
           filterData();
         } else {
+          document.getElementById('login-error').classList.add('hidden'); // fix error toggle
           document.getElementById('login-error').classList.remove('hidden');
         }
       }
@@ -360,12 +369,36 @@
         document.getElementById('auth-container').classList.remove('hidden');
         document.getElementById('user-container').classList.add('hidden');
         
+        // Ẩn nút Rút điểm danh khi đăng xuất
+        document.getElementById('btn-rut-diem-danh').classList.add('hidden');
+
         const classSelect = document.getElementById('filter-class');
         classSelect.value = "";
         classSelect.disabled = false;
 
         updateStats(globalData);
         filterData();
+      }
+
+      // Hàm gọi API thực hiện rút điểm danh lưu sang sheet thongke
+      function rutDiemDanh() {
+        if (!confirm("Bạn có chắc chắn muốn rút và lưu dữ liệu điểm danh hiện tại vào sheet thongke không?")) return;
+
+        const rutUrl = `${GAS_API_URL}?action=rut_diem_danh`;
+        
+        fetch(rutUrl)
+        .then(res => res.json())
+        .then(response => {
+          if (response.success) {
+            alert("✅ " + response.message);
+          } else {
+            alert("❌ Rút thất bại: " + response.message);
+          }
+        })
+        .catch(err => {
+          console.error("Lỗi:", err);
+          alert("❌ Lỗi kết nối khi thực hiện rút điểm danh!");
+        });
       }
 
       function changeStatus(maSo, newStatus) {
