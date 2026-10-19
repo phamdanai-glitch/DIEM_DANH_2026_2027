@@ -97,7 +97,7 @@
               <th class="py-3 px-4 font-semibold">Họ và Tên (J)</th>
               <th class="py-3 px-4 font-semibold w-28">Lớp (K)</th>
               <th class="py-3 px-4 font-semibold w-36">Thời gian (G)</th>
-              <th class="py-3 px-4 font-semibold w-40 text-center">Trạng thái (F)</th>
+              <th class="py-3 px-4 font-semibold w-40 text-center">Trạng thái (F/M)</th>
             </tr>
           </thead>
           <tbody id="table-body" class="divide-y divide-gray-100 text-sm text-gray-700">
@@ -136,7 +136,7 @@
       const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyMr1nSgj9Xc0mQ77Wpg9PB7XSb14q2qMmtSEYmohw7LYURYJQzwdI4SaVPzYLEIp0rJg/exec";
 
       let globalData = [];
-      let loggedInClass = null; // Lưu lớp GVCN đang đăng nhập
+      let loggedInClass = null;
 
       function loadData() {
         document.getElementById('update-time').innerText = new Date().toLocaleTimeString();
@@ -180,14 +180,13 @@
       }
 
       function updateStats(data) {
-        // Nếu đã đăng nhập, chỉ tính thống kê của lớp đó
         let targetData = loggedInClass ? data.filter(row => row[2] === loggedInClass) : data;
         
         const total = targetData.length;
         let dungGio = 0, diTre = 0, khongPhep = 0;
 
         targetData.forEach(row => {
-          let status = String(row[4] || '').toLowerCase(); // Cột Trạng thái
+          let status = String(row[4] || '').toLowerCase();
           if (status.includes('đúng giờ') || status.includes('có mặt')) dungGio++;
           else if (status.includes('trễ')) diTre++;
           else khongPhep++;
@@ -202,8 +201,6 @@
 
       function renderTable(data) {
         const tbody = document.getElementById('table-body');
-        
-        // Nếu GVCN đăng nhập, tự động lọc hoặc ưu tiên hiển thị lớp của giáo viên đó
         let displayData = data;
         if (loggedInClass) {
           displayData = data.filter(row => row[2] === loggedInClass);
@@ -234,7 +231,6 @@
             badgeColor = 'bg-red-50 text-red-700 border-red-100';
           }
 
-          // Nếu đúng là GVCN của lớp này đăng nhập, cho phép đổi trạng thái trực tiếp
           let statusHtml = `<span class="inline-block px-3 py-1 rounded-full text-xs font-semibold border ${badgeColor}">${trangThai}</span>`;
           if (loggedInClass && loggedInClass === lop) {
             statusHtml = `
@@ -283,7 +279,6 @@
         document.getElementById('count-display').innerText = `${filtered.length} / ${globalData.length}`;
       }
 
-      // Xử lý Modal Đăng Nhập
       function openLoginModal() {
         document.getElementById('login-modal').classList.remove('hidden');
       }
@@ -299,14 +294,12 @@
         const username = document.getElementById('login-username').value.trim().toUpperCase();
         const password = document.getElementById('login-password').value.trim();
 
-        // Mật khẩu chung cho các lớp là "123" (hoặc bạn có thể tùy chỉnh thêm điều kiện)
         if (username && password === "123") {
           loggedInClass = username;
           document.getElementById('auth-container').classList.add('hidden');
           document.getElementById('user-container').classList.remove('hidden');
           document.getElementById('logged-in-class').innerText = "GVCN Lớp: " + username;
           
-          // Cố định bộ lọc lớp theo đúng lớp GVCN
           const classSelect = document.getElementById('filter-class');
           classSelect.value = username;
           classSelect.disabled = true;
@@ -332,17 +325,14 @@
         filterData();
       }
 
-      // Hàm gửi yêu cầu cập nhật trạng thái lên Google Sheets
+      // Hàm gửi yêu cầu cập nhật trạng thái lưu vào Cột M bằng phương pháp GET
       function changeStatus(maSo, newStatus) {
-        fetch(GAS_API_URL, {
-          method: 'POST',
-          body: JSON.stringify({ maSo: maSo, trangThai: newStatus }),
-          headers: { 'Content-Type': 'application/json' }
-        })
+        const updateUrl = `${GAS_API_URL}?action=update&maSo=${encodeURIComponent(maSo)}&trangThai=${encodeURIComponent(newStatus)}`;
+        
+        fetch(updateUrl)
         .then(res => res.json())
         .then(response => {
           if (response.success) {
-            // Cập nhật lại mảng dữ liệu local
             const item = globalData.find(row => row[0] === maSo);
             if (item) item[4] = newStatus;
             updateStats(globalData);
