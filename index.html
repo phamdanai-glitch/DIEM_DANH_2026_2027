@@ -348,7 +348,6 @@
           document.getElementById('user-container').classList.remove('hidden');
           document.getElementById('logged-in-class').innerText = "GVCN Lớp: " + username;
           
-          // Hiển thị nút Rút điểm danh khi GVCN đăng nhập thành công
           document.getElementById('btn-rut-diem-danh').classList.remove('hidden');
 
           const classSelect = document.getElementById('filter-class');
@@ -359,7 +358,6 @@
           updateStats(globalData);
           filterData();
         } else {
-          document.getElementById('login-error').classList.add('hidden'); // fix error toggle
           document.getElementById('login-error').classList.remove('hidden');
         }
       }
@@ -369,7 +367,6 @@
         document.getElementById('auth-container').classList.remove('hidden');
         document.getElementById('user-container').classList.add('hidden');
         
-        // Ẩn nút Rút điểm danh khi đăng xuất
         document.getElementById('btn-rut-diem-danh').classList.add('hidden');
 
         const classSelect = document.getElementById('filter-class');
@@ -380,9 +377,8 @@
         filterData();
       }
 
-      // Hàm gọi API thực hiện rút điểm danh lưu sang sheet thongke
       function rutDiemDanh() {
-        if (!confirm("Bạn có chắc chắn muốn rút và lưu dữ liệu điểm danh hiện tại vào sheet thongke không?")) return;
+        if (!confirm("Bạn có chắc chắn muốn rút điểm danh, lưu vào sheet thongke, làm sạch cột M và tải file Excel về máy không?")) return;
 
         const rutUrl = `${GAS_API_URL}?action=rut_diem_danh`;
         
@@ -391,6 +387,15 @@
         .then(response => {
           if (response.success) {
             alert("✅ " + response.message);
+            if (response.downloadUrl) {
+              const a = document.createElement('a');
+              a.href = response.downloadUrl;
+              a.download = 'ThongKe_DiemDanh.xlsx';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            }
+            loadData();
           } else {
             alert("❌ Rút thất bại: " + response.message);
           }
